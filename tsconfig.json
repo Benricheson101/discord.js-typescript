@@ -1,0 +1,22 @@
+{
+  "compilerOptions": {
+    "module": "commonjs",
+    "target": "es2019",
+    "outDir": "./build",
+    "sourceMap": false,
+    "baseUrl": ".",
+    "paths": {
+      "~/*": ["src/*"],
+      "@util/*": ["src/util/*"],
+      "@types": ["src/types"],
+      "@command": ["src/util/Command.ts"]
+    }
+ },
+  "typeRoots": [
+    "./node_modules/@types",
+    "./src/util/types"
+  ],
+  "exclude": [
+    "node_modules"
+  ]
+}

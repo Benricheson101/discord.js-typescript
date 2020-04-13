@@ -1,0 +1,32 @@
+{
+  "name": "ts-template",
+  "version": "1.0.0",
+  "main": "index.js",
+  "license": "MIT",
+  "dependencies": {
+    "discord.js": "discordjs/discord.js",
+    "module-alias": "^2.2.2",
+    "mongodb": "^3.5.5"
+  },
+  "devDependencies": {
+    "@types/mongodb": "^3.5.5",
+    "@typescript-eslint/eslint-plugin": "2",
+    "@typescript-eslint/parser": "^2.27.0",
+    "eslint": "6",
+    "eslint-config-google": "^0.14.0",
+    "eslint-config-standard": "^14.1.1",
+    "eslint-config-standard-with-typescript": "^15.0.1",
+    "eslint-plugin-import": "2",
+    "eslint-plugin-node": "11",
+    "eslint-plugin-prettier": "^3.1.2",
+    "eslint-plugin-promise": "4",
+    "eslint-plugin-standard": "4",
+    "prettier": "^2.0.4",
+    "typescript": "^3.8.3"
+  },
+  "_moduleAliases": {
+    "~": "build/",
+    "@util": "build/util/",
+    "@command": "build/util/Command.js"
+  }
+}
