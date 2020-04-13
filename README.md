@@ -2,15 +2,15 @@
 
 ### How to use
 
-1. Clone this repo\
+1. Clone this repo
     ```bash
     $ git clone git@github.com:Benricheson101/discord.js-typescript.git
     ```
-2. Install the dependencies\
+2. Install the dependencies
     ```bash
     $ yarn install
     ```
-3. Start the bot!\
+3. Start the bot!
     ```bash
     $ yarn tsc 
     $ TOKEN="your-token" node build/index.js
