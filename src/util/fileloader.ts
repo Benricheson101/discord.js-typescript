@@ -5,6 +5,7 @@ import { promises, PathLike } from 'fs'
 import { resolve, basename } from 'path'
 import Client from './Client'
 import Command from '@command'
+import { bgMagenta, bgGreen } from 'chalk'
 
 /**
  * Recursively load files
@@ -36,7 +37,7 @@ async function loadEvents (client: Client, eventsDir: string) {
     const eventName = basename(file).split('.')[0]
 
     client.on(eventName as any, event.bind(null, client))
-    console.log(`[E] Loaded ${eventName}`)
+    console.log(`${bgGreen('[E]')} Loaded ${eventName}`)
   }
 }
 
@@ -58,7 +59,7 @@ async function loadCommands (client: Client, commandsRootDir: string): Promise<v
     }
 
     client.commands.set(command.config.name, command)
-    console.log(`[C] Loaded ${command.config.name}`)
+    console.log(`${bgMagenta('[C]')} Loaded ${command.config.name}`)
   }
 }
 
