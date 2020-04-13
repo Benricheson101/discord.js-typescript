@@ -11,7 +11,10 @@ export = async (client: Client, message: Message) => {
   // @ts-ignore
   let guild: GuildDocument = await message.guild.db
 
-  if (!guild) guild = defaultGuildDocument(message.guild.id)
+  if (!guild) {
+    guild = defaultGuildDocument(message.guild.id)
+    client.db.insert('guilds', guild)
+  }
 
   if (!message.content.startsWith(guild.config.prefix)) return
 

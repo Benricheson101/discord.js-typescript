@@ -4,7 +4,7 @@ import { GuildDocument } from './types'
 export const token = process.env.TOKEN
 
 export const constants = {
-  name: 'bot',
+  name: 'ts-bot',
   prefix: '/'
 }
 
