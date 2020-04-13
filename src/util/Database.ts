@@ -12,14 +12,14 @@ import {
   MongoCountPreferences,
   Db,
   MongoClient
-} from "mongodb";
-import { Snowflake } from "discord.js";
-import { DatabaseOptions } from '@types'
+} from 'mongodb'
+import { Snowflake } from 'discord.js'
+import { DatabaseOptions, GuildDocument } from '@types'
 
 export class Database {
   db?: Db;
 
-  constructor (private config: DatabaseOptions) {
+  constructor (private readonly config: DatabaseOptions) {
   }
 
   /**
@@ -29,10 +29,10 @@ export class Database {
   async connect (): Promise<void> {
     const mongo = await connect(this.config.url, this.config.clientOptions)
       .catch((err) => {
-        console.error(err);
-      });
+        console.error(err)
+      })
     if (mongo instanceof MongoClient) {
-      this.db = mongo.db(this.config.name);
+      this.db = mongo.db(this.config.name)
     }
   }
 
@@ -44,7 +44,7 @@ export class Database {
    * @returns {Promise<InsertOneWriteOpResult<any>>}
    */
   async insert (collection: CollectionName, data: any, options?: CollectionInsertOneOptions): Promise<InsertOneWriteOpResult<any>> {
-    return this.db.collection(collection).insertOne(data, options);
+    return await this.db.collection(collection).insertOne(data, options)
   }
 
   /**
@@ -56,7 +56,7 @@ export class Database {
    * @returns {Promise<UpdateWriteOpResult>}
    */
   async update (collection: CollectionName, query: any, data: any, options?: UpdateOneOptions): Promise<UpdateWriteOpResult> {
-    return this.db.collection(collection).updateOne(query, { $set: data }, options);
+    return await this.db.collection(collection).updateOne(query, { $set: data }, options)
   }
 
   /**
@@ -70,7 +70,7 @@ export class Database {
    * updateRaw("guilds", { id: "1234" }, { $set: { prefix: "!!" } })
    */
   async updateRaw (collection: CollectionName, query: any, data: any, options?: UpdateOneOptions): Promise<UpdateWriteOpResult> {
-    return this.db.collection(collection).updateOne(query, data, options);
+    return await this.db.collection(collection).updateOne(query, data, options)
   }
 
   /**
@@ -82,7 +82,7 @@ export class Database {
    * @returns {Promise<ReplaceWriteOpResult>}
    */
   async replace (collection: CollectionName, filter: any, data: any, options?: ReplaceOneOptions): Promise<ReplaceWriteOpResult> {
-    return this.db.collection(collection).replaceOne(filter, data, options);
+    return await this.db.collection(collection).replaceOne(filter, data, options)
   }
 
   /**
@@ -92,7 +92,7 @@ export class Database {
    * @returns {Promise<DeleteWriteOpResultObject>}
    */
   async delete (collection: CollectionName, query: any): Promise<DeleteWriteOpResultObject> {
-    return this.db.collection(collection).deleteOne(query);
+    return await this.db.collection(collection).deleteOne(query)
   }
 
   /**
@@ -102,7 +102,7 @@ export class Database {
    * @returns {Promise<boolean>}
    */
   async drop (collection: CollectionName, options?: ClientSession): Promise<boolean> {
-    return this.db.collection(collection).drop((options as any));
+    return await this.db.collection(collection).drop((options as any))
   }
 
   /**
@@ -112,7 +112,7 @@ export class Database {
    * @returns {Promise<any | null>}
    */
   async find (collection: CollectionName, query: any): Promise<any | null> {
-    return this.db.collection(collection).findOne(query);
+    return await this.db.collection(collection).findOne(query)
   }
 
   /**
@@ -123,7 +123,7 @@ export class Database {
    * @returns {Promise<number>}
    */
   async count (collection: CollectionName, query?: any, options?: MongoCountPreferences): Promise<number> {
-    return this.db.collection(collection).countDocuments(query, options);
+    return await this.db.collection(collection).countDocuments(query, options)
   }
 
   /**
@@ -133,7 +133,7 @@ export class Database {
    * @returns {Promise<any[]>}
    */
   async findMany (collection: CollectionName, query: any): Promise<any[]> {
-    return this.db.collection(collection).find(query).toArray();
+    return await this.db.collection(collection).find(query).toArray()
   }
 
   /**
@@ -142,8 +142,8 @@ export class Database {
    * @param {Snowflake} id
    * @returns Promise<any>
    */
-  async findOneById (collection: CollectionName, id: Snowflake) {
-    return this.db.collection(collection).findOne({ id: id });
+  async findOneById (collection: CollectionName, id: Snowflake): Promise<any> {
+    return await this.db.collection(collection).findOne({ id: id })
   }
 
   /**
@@ -151,10 +151,10 @@ export class Database {
    * @deprecated
    * @example
    * Client.db.guilds.findOne({ id: 123 })
-   * @returns {Collection<GuildDB>} - The guild's settings document
+   * @returns {Collection<GuildDocument>} - The guild's settings document
    */
-  get guilds () {
-    return this.db.collection("guilds");
+  get guilds (): Collection<GuildDocument> {
+    return this.db.collection('guilds')
   }
 
   /**
@@ -162,9 +162,9 @@ export class Database {
    * @deprecated
    * @return {Collection}
    */
-  get users () {
-    return this.db.collection("users");
+  get users (): Collection<any> {
+    return this.db.collection('users')
   }
 }
 
-type CollectionName = "users" | "guilds" | string;
+type CollectionName = 'users' | 'guilds' | string;
