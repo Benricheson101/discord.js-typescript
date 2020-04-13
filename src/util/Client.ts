@@ -10,7 +10,7 @@ export default class extends Client {
    */
   commands: Collection<string, Command> = new Collection()
   /** The main database */
-  db: any
+  db
   /** Bot administrators */
   admins: Snowflake[]
 

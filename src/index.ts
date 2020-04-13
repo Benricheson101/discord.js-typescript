@@ -2,6 +2,7 @@ import 'module-alias/register'
 import Client from '@util/Client'
 import { token, clientOptions } from './setup'
 import { loadEvents, loadCommands } from '@util/fileloader'
+import '@util/Structures/guild'
 
 const client = new Client(clientOptions)
 

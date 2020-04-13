@@ -7,11 +7,11 @@ Structures.extend('Guild', (Guild) => {
 
     constructor (client: Client, data: any) {
       super(client, data)
-      this._client = data
+      this._client = client
     }
 
     get db (): Promise<any> {
-      return this._client.db.find('guilds', { id: this.id })
+      return this._client.db.guilds.findOne({ id: this.id })
     }
   }
 })
