@@ -3,7 +3,10 @@ import { Message } from 'discord.js'
 
 export default new Command({
   name: 'ping',
-  aliases: ['hello']
+  aliases: ['hello'],
+  help: {
+    category: 'other'
+  }
 }, async (client, message) => {
   const pre: number = Date.now()
   const msg: Message = await message.channel.send('Pong!')

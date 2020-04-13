@@ -1,8 +1,10 @@
 import Client from '@util/Client'
+import * as chalk from 'chalk'
 
 export = (client: Client) => {
-  console.log(`${client.user.tag} is now online!
-  Guilds: ${client.guilds.cache.size}
-  Channels: ${client.channels.cache.size}
-  Users: ${client.users.cache.size}`)
+  console.log(chalk`{red.strikethrough ${'-'.repeat((client.user.tag + ' is now online!').length)}}`)
+  console.log(chalk`{cyan {bold ${client.user.tag}} is now online!}
+  {cyan Guilds: {bold ${client.guilds.cache.size}}
+  Channels: {bold ${client.channels.cache.size}}
+  Users: {bold ${client.users.cache.size}}}`)
 }

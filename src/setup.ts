@@ -1,3 +1,4 @@
+import '@util/dotenv'
 import { ClientOptions, Snowflake } from 'discord.js'
 import { GuildDocument } from './types'
 
@@ -5,7 +6,10 @@ export const token = process.env.TOKEN
 
 export const constants = {
   name: 'ts-bot',
-  prefix: '/'
+  prefix: '/',
+  colors: {
+    default: '#286ece'
+  }
 }
 
 export const errors = {
