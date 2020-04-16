@@ -5,7 +5,7 @@ import { MongoClientOptions } from 'mongodb'
 declare module 'discord.js' {
   export interface Guild {
     /** The guild's database document (if there is one) */
-    db: Promise<any>
+    db: Promise<GuildDocument>
   }
 
   export interface ClientOptions {
