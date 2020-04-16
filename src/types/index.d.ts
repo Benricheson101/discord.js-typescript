@@ -3,6 +3,11 @@ import Client from '~/util/Client'
 import { MongoClientOptions } from 'mongodb'
 
 declare module 'discord.js' {
+  export interface Guild {
+    /** The guild's database document (if there is one) */
+    db: Promise<any>
+  }
+
   export interface ClientOptions {
     /** Bot admins */
     admins: Snowflake[]
