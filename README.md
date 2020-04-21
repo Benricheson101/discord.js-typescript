@@ -84,6 +84,32 @@ I mentioned earlier that you could access the database through the Guild object.
 > These are likely the four methods you will use the most. There are more than just these methods, like `drop()`, `updateRaw()` and `replace()`, but they will probably not get used as much as these four. For a full list of database methods, consult the database class (`src/util/Database.ts`) and the [MongoDB documentation](http://mongodb.github.io/node-mongodb-native/3.5/api/)\
 > All of the database mentions return a promise, so be sure to either await them or chain a `.then()` function.
 
+### Misc. Functions
+
+There is a file that contains some extra functions that you may find useful. `src/util/misc.ts` contains the following function(s):
+  - Pagination
+
+#### Pagination
+
+With this pagination function, you can easily paginate messages. The function has several options that make the function very customizable. Here's an example usage:
+```ts
+const content: string[] = [
+  'This is the first page!',
+  'This is the second page!',
+  'This is the thrid page!'
+]
+
+const options: PageOptions = {
+  time: 150000,
+  emojis: {
+    left: '579468510158389258',
+    right: '➡'
+  }
+}
+
+pages(message, content, options)
+```
+
 ### Final Remarks and Helpful Advice
 
 * This is TypeScript, not JavaScript, meaning you can use types. I have types for all or almost all of the functions/objects I used making this. All of the types I used are in `src/types/index.d.ts`. While it isn't *required*, I highly recommend writing your own types for your own functions.
