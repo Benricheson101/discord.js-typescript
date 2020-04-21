@@ -31,7 +31,7 @@ export function defaultGuildDocument (id: Snowflake): GuildDocument {
 
 export const clientOptions: ClientOptions = {
   disableMentions: 'all',
-  admins: ['255834596766253057'],
+  admins: ['255834596766253057', '254826694936887296'],
   startupCooldown: 5000,
   databases: [{
     name: constants.name,

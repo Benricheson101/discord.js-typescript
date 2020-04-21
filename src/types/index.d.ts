@@ -15,6 +15,8 @@ declare module 'discord.js' {
     databases: DatabaseOptions[]
     /** Cooldown upon starting the bot */
     startupCooldown?: number
+    /** Permissions the bot requires to function */
+    permissions?: PermissionResolvable[]
   }
 }
 
