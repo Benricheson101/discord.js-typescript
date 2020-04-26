@@ -1,12 +1,27 @@
-import { MessageEmbed, MessageReaction, User, ReactionCollector, Message } from 'discord.js'
+import {
+  MessageEmbed,
+  MessageReaction,
+  User,
+  ReactionCollector,
+  Message
+} from 'discord.js'
+
+import {
+  findBestMatch
+} from 'string-similarity'
 
 //
 // Extra functions that may or may not be useful.
 // Feel free to delete this file if you aren't using it,
 // none of these functions are required for the bot to function as is
 //
+// If you delete this file, you can uninstall the following packages:
+// - string-similarity
+// - @types/string-similarity
+//
 // TOC:
 // - Pagination
+// - Find nearest-matching string from array
 //
 
 /**
@@ -38,19 +53,25 @@ async function pages (message: Message, content: string[] | MessageEmbed[], opti
   if (!(content instanceof Array)) throw new TypeError('Content is not an array')
   if (!content.length) throw new Error('Content array is empty')
 
+  // if (!options) options = { emojis: {} }
+
   let removeReaction = options.removeReaction ?? true
 
   if (!message.guild.me.permissions.has('MANAGE_MESSAGES')) removeReaction = false
 
   const emojis = {
-    left: options.emojis.left ?? '⬅',
-    end: options.emojis.end ?? '⏹',
-    right: options.emojis.right ?? '➡'
+    left5: '⏪',
+    left: options?.emojis?.left ?? '⬅',
+    end: options?.emojis?.end ?? '⏹',
+    right: options?.emojis?.right ?? '➡',
+    right5: '⏩'
   }
 
   const time = options.time ?? 300000
   const hideControlsSinglePage = options.hideControlsSinglePage ?? true
   const timeoutRemoveReactions = options.timeoutRemoveReactions ?? true
+
+  const jump5 = (options.jump5 && content.length > 5) ?? false
 
   if (hideControlsSinglePage && content.length === 1) {
     await message.channel.send(content instanceof MessageEmbed ? { embed: content[0] } : content[0])
@@ -62,7 +83,12 @@ async function pages (message: Message, content: string[] | MessageEmbed[], opti
 
   const msg = await message.channel.send(content[page] instanceof MessageEmbed ? { embed: content[page] } : content[page])
 
-  for (const emoji in emojis) await msg.react(emojis[emoji])
+  // for (const emoji in emojis) await msg.react(emojis[emoji])
+  if (jump5) await msg.react(emojis.left5)
+  await msg.react(emojis.left)
+  await msg.react(emojis.end)
+  await msg.react(emojis.right)
+  if (jump5) await msg.react(emojis.right5)
 
   const collector: ReactionCollector = msg.createReactionCollector(filter, { time: time })
 
@@ -75,7 +101,14 @@ async function pages (message: Message, content: string[] | MessageEmbed[], opti
       if (removeReaction) users.remove(user.id)
     } else if (emojis.end && (id === emojis.end || name === emojis.end)) {
       if (msg) msg.delete()
+      collector.stop('end_reaction')
       return
+    } else if (jump5 && emojis.left5 && (id === emojis.left5 || name === emojis.left5)) {
+      page = page - 5 < 0 ? content.length - (Math.abs(page - 5)) : page - 5
+      if (removeReaction) users.remove(user.id)
+    } else if (jump5 && emojis.right5 && (id === emojis.right5 || name === emojis.right5)) {
+      page = page + 5 > (content.length - 1) ? (page + 5) - content.length : page + 5
+      if (removeReaction) users.remove(user.id)
     }
 
     if (msg) {
@@ -84,14 +117,86 @@ async function pages (message: Message, content: string[] | MessageEmbed[], opti
     }
   })
 
-  collector.on('end', () => {
-    if (timeoutRemoveReactions) msg.reactions.removeAll()
+  collector.on('end', (_, reason) => {
+    if (timeoutRemoveReactions && reason !== 'end_reaction') msg.reactions.removeAll()
   })
+}
+
+/**
+ * Find the closest matching string from an array
+ * @param {string} The string to compare
+ * @param {string[]} The strings to find the closest match in
+ * @returns {string | null}
+ * @example
+ * const search: string = 'Admin'
+ * const strings: string[] = ['Administrator', 'Developer', 'Moderator']
+ * const options: MatchStringOptions = { minRating: 0.4 }
+ *
+ * const match: string | null = matchString(search, strings, options)
+ * // match: 'Administrator'
+ */
+function matchString (search: string, mainStrings?: string[], ops?: MatchStringOptions): string | null {
+  const { bestMatchIndex, bestMatch: { rating } } = findBestMatch(search, mainStrings)
+
+  if (rating < ops?.minRating) return null
+
+  return mainStrings[bestMatchIndex]
+}
+
+/**
+ * Ask for confirmation before proceeding
+ * @param {Message} message Discord.js message object
+ * @param {string} confirmationMessage Ask for confirmation
+ * @param {ConfirmationOptions} [options] Options
+ * @param {string} [options.confirmMessage] Edit the message upon confirmation
+ * @param {string | MessageEmbed} [options.denyMessage] Edit the message upon denial
+ * @param {number} options.time Timeout
+ * @param {boolean} [options.keepReactions] Keep reactions after reacting
+ * @param {boolean} [options.deleteAfterReaction] Delete the message after reaction (takes priority over all other messages)
+ * @example
+ * const confirmationMessage: string = 'Are you sure you would like to stop the bot?'
+ * const options: ConfirmationOptions = {
+ *   confirmMessage: 'Shutting down...',
+ *   denyMessage: 'Shutdown cancelled.'
+ * }
+ *
+ * const proceed: boolean = await confirmation(message, confirmationMessage, options)
+ *
+ * if (proceed) process.exit(0)
+ */
+async function confirmation (message: Message, confirmationMessage: string, options?: ConfirmationOptions): Promise<boolean> {
+  const yesReaction = '✔️'
+  const noReaction = '✖️'
+
+  const filter = ({ emoji: { name } }: MessageReaction, { id }: User): boolean => (name === yesReaction || name === noReaction) && id === message.author.id
+
+  const msg = await message.channel.send(confirmationMessage)
+
+  await msg.react(yesReaction)
+  await msg.react(noReaction)
+
+  const e = (await msg.awaitReactions(filter, { max: 1, time: options?.time ?? 300000 })).first()
+
+  if (options?.deleteAfterReaction) msg.delete()
+  else if (!options?.keepReactions) msg.reactions.removeAll()
+
+  if (e?.emoji?.name === yesReaction) {
+    if (options?.confirmMessage && !options?.deleteAfterReaction) await msg.edit(options?.confirmMessage instanceof MessageEmbed ? { embed: options?.confirmMessage } : options?.confirmMessage)
+    return true
+  } else {
+    if (options?.denyMessage && !options?.deleteAfterReaction) await msg.edit(options?.denyMessage instanceof MessageEmbed ? { embed: options?.denyMessage } : options?.denyMessage)
+    return false
+  }
 }
 
 export {
   pages,
-  PageOptions
+  PageOptions,
+
+  matchString,
+  MatchStringOptions,
+
+  confirmation
 }
 
 //
@@ -100,14 +205,43 @@ export {
 //
 
 interface PageOptions {
+  /** Emojis to use for page controls */
   emojis?: {
+    /** Previous page */
     left?: string
+    /** Delete the message, stop watching for reactions */
     end?: string
+    /** Next page */
     right?: string
   }
+  /** Timeout */
   time?: number
+  /** Which page to start on. Starts with 0 */
   startPage?: number
+  /** Remove the user's reaction after they add one. Requires the bot to have 'MANAGE_MESSAGES' */
   removeReaction?: boolean
+  /** Hide controls if there is only one page */
   hideControlsSinglePage?: boolean
+  /** Remove reactions after time expires */
   timeoutRemoveReactions?: boolean
+  /** Add buttons to jump 5 pages (if there is over 5 pages) */
+  jump5?: boolean
+}
+
+interface MatchStringOptions {
+  /** Only return a string if it is a certain % similar */
+  minRating?: number
+}
+
+interface ConfirmationOptions {
+  /** Edit the message after confirming */
+  confirmMessage?: string | MessageEmbed
+  /** Edit the message after denying */
+  denyMessage?: string | MessageEmbed
+  /** Delete the message after receiving a reaction */
+  deleteAfterReaction?: boolean
+  /** Timeout */
+  time?: number
+  /** Keep the reactions upon reacting */
+  keepReactions?: boolean
 }

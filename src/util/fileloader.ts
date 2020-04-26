@@ -37,7 +37,7 @@ async function loadEvents (client: Client, eventsDir: string) {
     const eventName = basename(file).split('.')[0]
 
     client.on(eventName as any, event.bind(null, client))
-    console.log(chalk`{green [E] Loaded {bold ${eventName}}}`)
+    console.log(chalk`{green [{bold E}] Loaded {bold ${eventName}}}`)
   }
 }
 
@@ -55,12 +55,12 @@ async function loadCommands (client: Client, commandsRootDir: string): Promise<v
     if (!(command instanceof Command)) continue
 
     if (!command.config.name) {
-      console.error(chalk`{yellow [C] Command file {bold ${basename(file)}} does not contain a 'name' property so it was not loaded}`)
+      console.error(chalk`{yellow [{bold C}] Command file {bold ${basename(file)}} does not contain a 'name' property so it was not loaded}`)
       continue
     }
 
     client.commands.set(command.config.name, command)
-    console.log(chalk`{magenta [C] Loaded {bold ${command.config.name}}}`)
+    console.log(chalk`{magenta [{bold C}] Loaded {bold ${command.config.name}}}`)
   }
 }
 

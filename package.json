@@ -8,11 +8,13 @@
     "discord.js": "discordjs/discord.js",
     "dotenv": "^8.2.0",
     "module-alias": "^2.2.2",
-    "mongodb": "^3.5.5"
+    "mongodb": "^3.5.5",
+    "string-similarity": "^4.0.1"
   },
   "devDependencies": {
     "@types/dotenv": "^8.2.0",
     "@types/mongodb": "^3.5.5",
+    "@types/string-similarity": "^3.0.0",
     "@typescript-eslint/eslint-plugin": "2",
     "@typescript-eslint/parser": "^2.27.0",
     "eslint": "^6.8.0",

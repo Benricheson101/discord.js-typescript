@@ -21,12 +21,14 @@ export = async (client: Client, message: Message) => {
   const command: string = args.shift().toLowerCase()
 
   const cmd: Command | null = client.commands.get(command) ||
-    client.commands.find((c: Command) => c.config.aliases && c.config.aliases.includes(command))
+    client.commands.find((c: Command) => c.config?.aliases.includes(command))
   if (!cmd) return
 
-  if (cmd.config.disabled && !client.options.admins.includes(message.author.id)) return await message.channel.send('🔒 This command has been disabled.')
+  if (cmd.config.adminLock && !client.admins.has(message.author.id)) return await message.channel.send('🔒 You do not have permission to use this command.')
 
-  if (client.options.startupCooldown && client.uptime < client.options.startupCooldown && !client.options.admins.includes(message.author.id)) return await message.channel.send('🕐 I am still starting up, please try again in a few seconds')
+  if (cmd.config.disabled && !client.admins.has(message.author.id)) return await message.channel.send('🔒 This command has been disabled.')
+
+  if (client.options?.startupCooldown > client.uptime && !client.admins.has(message.author.id)) return await message.channel.send('🕐 I am still starting up, please try again in a few seconds')
 
   try {
     cmd.run(client, message, args)

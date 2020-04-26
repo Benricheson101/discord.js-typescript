@@ -12,12 +12,6 @@
     ```
 3. Setup the bot
     ```ts
-    // src/setup.ts
-    export const clientOptions: ClientOptions = {
-      ...
-      admins: ['your id'],
-      ...
-    }
     // <project root>/.env.development
     // see the 'Environment Variables' section for more info
     TOKEN='your-token'

@@ -1,5 +1,5 @@
 import { PermissionResolvable, Message, Snowflake } from 'discord.js'
-import Client from '~/util/Client'
+import Client from '@util/Client'
 import { MongoClientOptions } from 'mongodb'
 
 declare module 'discord.js' {
@@ -27,6 +27,8 @@ export interface CommandOptions {
   aliases?: string[]
   /** Disable the command */
   disabled?: boolean
+  /** Only allow bot admins to use a command */
+  adminLock?: boolean
   /** Info for the help command */
   help?: {
     /** A description of the command */

@@ -15,11 +15,15 @@ import {
 } from 'mongodb'
 import { Snowflake } from 'discord.js'
 import { DatabaseOptions, GuildDocument } from '@types'
+import * as chalk from 'chalk'
 
 export class Database {
   db?: Db;
 
   constructor (private readonly config: DatabaseOptions) {
+    this.connect()
+      .then(() => console.log(chalk`{blue [{bold D}] {bold Connected} to MongoDB}`))
+      .catch(console.error)
   }
 
   /**
