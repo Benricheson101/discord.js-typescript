@@ -196,7 +196,8 @@ export {
   matchString,
   MatchStringOptions,
 
-  confirmation
+  confirmation,
+  ConfirmationOptions
 }
 
 //
