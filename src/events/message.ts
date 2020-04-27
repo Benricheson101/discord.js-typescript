@@ -21,7 +21,7 @@ export = async (client: Client, message: Message) => {
   const command: string = args.shift().toLowerCase()
 
   const cmd: Command | null = client.commands.get(command) ||
-    client.commands.find((c: Command) => c.config?.aliases.includes(command))
+    client.commands.find((c: Command) => c.config?.aliases?.includes(command))
   if (!cmd) return
 
   if (cmd.config.adminLock && !client.admins.has(message.author.id)) return await message.channel.send('🔒 You do not have permission to use this command.')

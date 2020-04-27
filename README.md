@@ -104,9 +104,40 @@ const options: PageOptions = {
 pages(message, content, options)
 ```
 
+#### Matching Strings
+
+This function will find the closest matching string from an array of strings. A lot of bots use it for a role command, for example. If you had a role called `Administrator`, it could find that role using `Admin` as input. Here's an example of its usage:
+```ts
+const search: string = 'Admin'
+
+const roleNames: string[] = ['Member', 'Moderator', 'Administrator']
+
+const options: MatchStringOptions = {
+  minRating: 0.4
+}
+
+const match: Nullable<string> = matchString(search, roleNames, options)
+```
+
+#### Confirmation
+
+The confirmation function allow you to ask for confirmation before continuing execution. It's extremely simple to use:
+```ts
+const confirmationMessage: string = 'Are you sure you would like to stop the bot?'
+
+const options: ConfirmationOptions = {
+  confirmMessage: 'Shutting down...',
+  denyMessage: 'Shutown cancelled.',
+  time: 10000,
+}
+
+const continue: boolean = await confirmation(message, confirmationMessage, options)
+if (continue) process.exit(0)
+```
+
 ### Final Remarks and Helpful Advice
 
-* This is TypeScript, not JavaScript, meaning you can use types. I have types for all or almost all of the functions/objects I used making this. All of the types I used are in `src/types/index.d.ts`. While it isn't *required*, I highly recommend writing your own types for your own functions.
+* There are typings for all or almost all of the functions I've used to make this bot, so use them!
 * The Guild database document has an interface, too! It's called `GuildDocument` and you can import it from `src/types/index.d.ts`
 * Use the module aliases that I have setup! The aliases I have setup right now are `@types`: `src/types/index.d.ts`, `@command`:`src/util/Command.ts` and `@util`: `src/util/*`. You can use them in any `import` or `require` statement. *NOTE*: The aliases do NOT work with other modules. They only work with imports
 * If you want to add additional items to the `CommandOptions`, you can! Just add them to the interface in `src/types/index.d.ts`!

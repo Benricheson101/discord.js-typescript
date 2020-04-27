@@ -2,6 +2,8 @@ import { PermissionResolvable, Message, Snowflake } from 'discord.js'
 import Client from '@util/Client'
 import { MongoClientOptions } from 'mongodb'
 
+export type Nullable<T> = T | null
+
 declare module 'discord.js' {
   export interface Guild {
     /** The guild's database document (if there is one) */

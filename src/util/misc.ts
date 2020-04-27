@@ -22,6 +22,7 @@ import {
 // TOC:
 // - Pagination
 // - Find nearest-matching string from array
+// - Confirmation
 //
 
 /**

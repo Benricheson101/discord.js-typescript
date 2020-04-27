@@ -18,7 +18,8 @@ import { DatabaseOptions, GuildDocument } from '@types'
 import * as chalk from 'chalk'
 
 export class Database {
-  db?: Db;
+  public db?: Db;
+  mongoClient?: MongoClient
 
   constructor (private readonly config: DatabaseOptions) {
     this.connect()
@@ -37,7 +38,16 @@ export class Database {
       })
     if (mongo instanceof MongoClient) {
       this.db = mongo.db(this.config.name)
+      this.mongoClient = mongo
     }
+  }
+
+  /**
+   * Close the MongoDB connection
+   */
+  async close (): Promise<void> {
+    if (!this.db || !this.mongoClient) throw new Error('NO RUNNING DB')
+    return await this.mongoClient.close()
   }
 
   /**
