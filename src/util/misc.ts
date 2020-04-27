@@ -35,8 +35,7 @@ import {
  * @example
  * message.channel.send('Hello')
  * await wait(5000)
- * message.channel.send('Hi')
- */
+ * message.channel.send('Hi') */
 export const wait = promisify(setTimeout)
 
 /**
@@ -53,6 +52,8 @@ export const wait = promisify(setTimeout)
  * @param {boolean} [options.removeReaction=true] Remove user's reaction (note: the bot must have `MANAGE_MESSAGES`)
  * @param {boolean} [options.hideControlsSinglePage=true] Hide the controls if there is only one page
  * @param {boolean} [options.timeoutRemoveReactions=true] Remove the reactions after the time expires
+ * @param {boolean} [options.keepOnStop] Keep the message after stopping the reaction collector
+ * @param {boolean} [options.jump5] If there are more than 5 pages, should there be an optionto skip 5 pages at a time?
  * @returns {Promise<number>}
  * @example
  * const content: string[] = ['First page', 'Second page', 'Third page']
@@ -169,7 +170,6 @@ function matchString (search: string, mainStrings?: string[], ops?: MatchStringO
  * @param {number} options.time Timeout
  * @param {boolean} [options.keepReactions] Keep reactions after reacting
  * @param {boolean} [options.deleteAfterReaction] Delete the message after reaction (takes priority over all other messages)
- * @param {boolean} [options.keepOnStop] Keep the message after stopping the reaction collector
  * @example
  * const confirmationMessage: string = 'Are you sure you would like to stop the bot?'
  * const options: ConfirmationOptions = {
@@ -244,8 +244,6 @@ interface PageOptions {
   timeoutRemoveReactions?: boolean
   /** Add buttons to jump 5 pages (if there is over 5 pages) */
   jump5?: boolean
-  /** Use the stop button as a selector instead of deleting the embed */
-  stopSelector?: boolean
   /** Should the stop button keep the message? */
   keepOnStop?: boolean
 }
