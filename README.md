@@ -82,6 +82,8 @@ I mentioned earlier that you could access the database through the Guild object.
 
 There is a file that contains some extra functions that you may find useful. `src/util/misc.ts` contains the following function(s):
   - Pagination
+  - Near Strings
+  - Wait for Confirmation
 
 #### Pagination
 
