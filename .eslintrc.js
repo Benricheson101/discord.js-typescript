@@ -21,6 +21,9 @@ module.exports = {
     '@typescript-eslint/no-unused-vars': 'error',
     '@typescript-eslint/indent': [ 'error', 2 ],
     '@typescript-eslint/strict-boolean-expressions': 0,
-    '@typescript-eslint/no-floating-promises': 0
+    '@typescript-eslint/no-floating-promises': 0,
+    '@typescript-eslint/no-misused-promises': 0,
+    'no-misused-promises': 0,
+    'no-async-promise-executor': 0
   }
 }

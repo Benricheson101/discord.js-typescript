@@ -10,6 +10,10 @@ import {
   findBestMatch
 } from 'string-similarity'
 
+import {
+  promisify
+} from 'util'
+
 //
 // Extra functions that may or may not be useful.
 // Feel free to delete this file if you aren't using it,
@@ -20,10 +24,20 @@ import {
 // - @types/string-similarity
 //
 // TOC:
+// - Wait function
 // - Pagination
 // - Find nearest-matching string from array
 // - Confirmation
 //
+
+/**
+ * Super basic but very useful sometimes. Basically a pause function for using with async/await
+ * @example
+ * message.channel.send('Hello')
+ * await wait(5000)
+ * message.channel.send('Hi')
+ */
+export const wait = promisify(setTimeout)
 
 /**
  * Paginate a message
@@ -39,7 +53,7 @@ import {
  * @param {boolean} [options.removeReaction=true] Remove user's reaction (note: the bot must have `MANAGE_MESSAGES`)
  * @param {boolean} [options.hideControlsSinglePage=true] Hide the controls if there is only one page
  * @param {boolean} [options.timeoutRemoveReactions=true] Remove the reactions after the time expires
- * @returns {Promise<void>}
+ * @returns {Promise<number>}
  * @example
  * const content: string[] = ['First page', 'Second page', 'Third page']
  *
@@ -50,76 +64,77 @@ import {
  *
  * pages(message, content, options)
 */
-async function pages (message: Message, content: string[] | MessageEmbed[], options?: PageOptions): Promise<void> {
-  if (!(content instanceof Array)) throw new TypeError('Content is not an array')
-  if (!content.length) throw new Error('Content array is empty')
+async function pages (message: Message, content: string[] | MessageEmbed[] | Array<string | MessageEmbed>, options?: PageOptions): Promise<number> {
+  return await new Promise(async (resolve) => {
+    if (!(content instanceof Array)) throw new TypeError('Content is not an array')
+    if (!content.length) throw new Error('Content array is empty')
 
-  // if (!options) options = { emojis: {} }
+    let removeReaction = options?.removeReaction ?? true
 
-  let removeReaction = options.removeReaction ?? true
+    if (!message.guild.me.permissions.has('MANAGE_MESSAGES')) removeReaction = false
 
-  if (!message.guild.me.permissions.has('MANAGE_MESSAGES')) removeReaction = false
+    const emojis = {
+      left5: '⏪',
+      left: options?.emojis?.left ?? '⬅',
+      end: options?.emojis?.end ?? '⏹',
+      right: options?.emojis?.right ?? '➡',
+      right5: '⏩'
+    }
 
-  const emojis = {
-    left5: '⏪',
-    left: options?.emojis?.left ?? '⬅',
-    end: options?.emojis?.end ?? '⏹',
-    right: options?.emojis?.right ?? '➡',
-    right5: '⏩'
-  }
+    const time = options?.time ?? 300000
+    const hideControlsSinglePage = options?.hideControlsSinglePage ?? true
+    const timeoutRemoveReactions = options?.timeoutRemoveReactions ?? true
 
-  const time = options.time ?? 300000
-  const hideControlsSinglePage = options.hideControlsSinglePage ?? true
-  const timeoutRemoveReactions = options.timeoutRemoveReactions ?? true
+    const jump5 = (options?.jump5 && content.length > 5) ?? content.length > 5
 
-  const jump5 = (options.jump5 && content.length > 5) ?? false
-
-  if (hideControlsSinglePage && content.length === 1) {
-    await message.channel.send(content instanceof MessageEmbed ? { embed: content[0] } : content[0])
-    return
-  }
-
-  const filter = (reaction: MessageReaction, user: User): boolean => (Object.values(emojis).includes(reaction.emoji.name) || Object.values(emojis).includes(reaction.emoji.id)) && !user.bot && user.id === message.author.id
-  let page: number = options.startPage || 0
-
-  const msg = await message.channel.send(content[page] instanceof MessageEmbed ? { embed: content[page] } : content[page])
-
-  // for (const emoji in emojis) await msg.react(emojis[emoji])
-  if (jump5) await msg.react(emojis.left5)
-  await msg.react(emojis.left)
-  await msg.react(emojis.end)
-  await msg.react(emojis.right)
-  if (jump5) await msg.react(emojis.right5)
-
-  const collector: ReactionCollector = msg.createReactionCollector(filter, { time: time })
-
-  collector.on('collect', ({ users, emoji: { id, name } }: MessageReaction, user: User) => {
-    if (emojis.left && (id === emojis.left || name === emojis.left)) {
-      page = page > 0 ? page - 1 : content.length - 1
-      if (removeReaction) users.remove(user.id)
-    } else if (emojis.right && (id === emojis.right || name === emojis.right)) {
-      page = page + 1 < content.length ? page + 1 : 0
-      if (removeReaction) users.remove(user.id)
-    } else if (emojis.end && (id === emojis.end || name === emojis.end)) {
-      if (msg) msg.delete()
-      collector.stop('end_reaction')
+    if (hideControlsSinglePage && content.length === 1) {
+      message.channel.send(content instanceof MessageEmbed ? { embed: content[0] } : content[0])
+      resolve(0)
       return
-    } else if (jump5 && emojis.left5 && (id === emojis.left5 || name === emojis.left5)) {
-      page = page - 5 < 0 ? content.length - (Math.abs(page - 5)) : page - 5
-      if (removeReaction) users.remove(user.id)
-    } else if (jump5 && emojis.right5 && (id === emojis.right5 || name === emojis.right5)) {
-      page = page + 5 > (content.length - 1) ? (page + 5) - content.length : page + 5
-      if (removeReaction) users.remove(user.id)
     }
 
-    if (msg) {
-      if (content[page] instanceof MessageEmbed) msg.edit({ embed: content[page] })
-      else msg.edit(content[page])
-    }
-  })
+    const filter = (reaction: MessageReaction, user: User): boolean => (Object.values(emojis).includes(reaction.emoji.name) || Object.values(emojis).includes(reaction.emoji.id)) && !user.bot && user.id === message.author.id
+    let page: number = options?.startPage || 0
 
-  collector.on('end', (_, reason) => {
-    if (timeoutRemoveReactions && reason !== 'end_reaction') msg.reactions.removeAll()
+    const msg = await message.channel.send(content[page] instanceof MessageEmbed ? { embed: content[page] } : content[page])
+
+    if (jump5) await msg.react(emojis.left5)
+    await msg.react(emojis.left)
+    await msg.react(emojis.end)
+    await msg.react(emojis.right)
+    if (jump5) await msg.react(emojis.right5)
+
+    const collector: ReactionCollector = msg.createReactionCollector(filter, { time: time })
+
+    collector.on('collect', ({ users, emoji: { id, name } }: MessageReaction, user: User) => {
+      if (emojis.left && (id === emojis.left || name === emojis.left)) {
+        page = page > 0 ? page - 1 : content.length - 1
+        if (removeReaction) users.remove(user.id)
+      } else if (emojis.right && (id === emojis.right || name === emojis.right)) {
+        page = page + 1 < content.length ? page + 1 : 0
+        if (removeReaction) users.remove(user.id)
+      } else if (emojis.end && (id === emojis.end || name === emojis.end)) {
+        collector.stop()
+        return
+      } else if (jump5 && emojis.left5 && (id === emojis.left5 || name === emojis.left5)) {
+        page = page - 5 < 0 ? content.length - (Math.abs(page - 5)) : page - 5
+        if (removeReaction) users.remove(user.id)
+      } else if (jump5 && emojis.right5 && (id === emojis.right5 || name === emojis.right5)) {
+        page = page + 5 > (content.length - 1) ? (page + 5) - content.length : page + 5
+        if (removeReaction) users.remove(user.id)
+      }
+
+      if (msg) {
+        if (content[page] instanceof MessageEmbed) msg.edit({ embed: content[page] })
+        else msg.edit(content[page], { embed: null })
+      }
+    })
+
+    collector.on('end', (_, reason) => {
+      if (!options?.keepOnStop) msg.delete()
+      if (timeoutRemoveReactions && options?.keepOnStop) msg.reactions.removeAll()
+      if (reason !== 'time') resolve(page)
+    })
   })
 }
 
@@ -154,6 +169,7 @@ function matchString (search: string, mainStrings?: string[], ops?: MatchStringO
  * @param {number} options.time Timeout
  * @param {boolean} [options.keepReactions] Keep reactions after reacting
  * @param {boolean} [options.deleteAfterReaction] Delete the message after reaction (takes priority over all other messages)
+ * @param {boolean} [options.keepOnStop] Keep the message after stopping the reaction collector
  * @example
  * const confirmationMessage: string = 'Are you sure you would like to stop the bot?'
  * const options: ConfirmationOptions = {
@@ -228,6 +244,10 @@ interface PageOptions {
   timeoutRemoveReactions?: boolean
   /** Add buttons to jump 5 pages (if there is over 5 pages) */
   jump5?: boolean
+  /** Use the stop button as a selector instead of deleting the embed */
+  stopSelector?: boolean
+  /** Should the stop button keep the message? */
+  keepOnStop?: boolean
 }
 
 interface MatchStringOptions {

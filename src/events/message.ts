@@ -5,6 +5,7 @@ import Command from '@command'
 import Client from '@util/Client'
 
 export = async (client: Client, message: Message) => {
+  if (!client.db) return await message.channel.send(':x: A database error occurred!')
   if (message.author.bot) return
   if (message.channel.type !== 'text') return
 
