@@ -59,6 +59,7 @@ async function loadCommands (client: Client, commandsRootDir: string): Promise<v
       continue
     }
 
+    command.config.filePath = file
     client.commands.set(command.config.name, command)
     console.log(chalk`{magenta [{bold C}] Loaded {bold ${command.config.name}}}`)
   }

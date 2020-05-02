@@ -32,7 +32,7 @@ export class Database {
    * @return {Promise<void>}
    */
   async connect (): Promise<void> {
-    const mongo = await connect(this.config.url, this.config.clientOptions)
+    const mongo = await connect(this.config.url, this.config.options)
       .catch((err) => {
         console.error(err)
       })
@@ -178,6 +178,14 @@ export class Database {
    */
   get users (): Collection<any> {
     return this.db.collection('users')
+  }
+
+  async getGuild (id: Snowflake): Promise<GuildDocument> {
+    return await this.find('guilds', { id: id })
+  }
+
+  async updateGuild (id: Snowflake, data: any): Promise<UpdateWriteOpResult> {
+    return await this.update('guilds', { id: id }, { $set: data })
   }
 }
 

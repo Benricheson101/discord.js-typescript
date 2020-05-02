@@ -15,8 +15,6 @@ export = async (client: Client) => {
   console.log(chalk`{red.strikethrough ${'-'.repeat((client.user.tag + ' is now online!').length)}}`)
   console.log(chalk`{cyan {bold ${client.user.tag}} is now online!}{cyan
   Guilds: {bold ${client.guilds.cache.size}}
-  Channels: {bold ${client.channels.cache.size}}
-  Users: {bold ${client.users.cache.size}}
   Admins: {bold ${Array.from(client.admins).length}}
   Commands: {bold ${client.commands.size}}}`)
 }

@@ -1,6 +1,6 @@
 import '@util/dotenv'
+import { GuildDocument } from '@types'
 import { ClientOptions, Snowflake } from 'discord.js'
-import { GuildDocument } from './types'
 
 export const token = process.env.TOKEN
 
@@ -31,14 +31,16 @@ export function defaultGuildDocument (id: Snowflake): GuildDocument {
 
 export const clientOptions: ClientOptions = {
   disableMentions: 'all',
-  admins: [],
   startupCooldown: 5000,
   databases: [{
     name: constants.name,
     url: `mongodb://localhost/${constants.name.replace(' ', '-')}`,
-    clientOptions: {
+    options: {
       useNewUrlParser: true,
       useUnifiedTopology: true
     }
   }]
+  // ws: {
+  // intents: new Intents(['GUILD_MESSAGES', 'GUILD_MESSAGE_REACTIONS'])
+  // }
 }

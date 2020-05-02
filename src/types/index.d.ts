@@ -12,7 +12,7 @@ declare module 'discord.js' {
 
   export interface ClientOptions {
     /** Bot admins */
-    admins: Snowflake[]
+    admins?: Set<Snowflake>
     /** Databases */
     databases: DatabaseOptions[]
     /** Cooldown upon starting the bot */
@@ -31,6 +31,8 @@ export interface CommandOptions {
   disabled?: boolean
   /** Only allow bot admins to use a command */
   adminLock?: boolean
+  /** Where the command file is located. Set automatically. */
+  filePath?: string
   /** Info for the help command */
   help?: {
     /** A description of the command */
@@ -51,7 +53,7 @@ export type CommandFunction = (client?: Client, message?: Message, args?: string
 export interface DatabaseOptions {
   name: string
   url: string
-  clientOptions: MongoClientOptions
+  options: MongoClientOptions
 }
 
 export interface GuildDocument {
