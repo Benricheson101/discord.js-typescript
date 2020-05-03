@@ -9,11 +9,10 @@ export const constants = {
   prefix: '/',
   colors: {
     default: '#286ece'
+  },
+  errors: {
+    generic: ':x: An error occurred.'
   }
-}
-
-export const errors = {
-  generic: ':x: An error occurred.'
 }
 
 /**
@@ -40,7 +39,4 @@ export const clientOptions: ClientOptions = {
       useUnifiedTopology: true
     }
   }]
-  // ws: {
-  // intents: new Intents(['GUILD_MESSAGES', 'GUILD_MESSAGE_REACTIONS'])
-  // }
 }

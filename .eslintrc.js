@@ -24,6 +24,7 @@ module.exports = {
     '@typescript-eslint/no-floating-promises': 0,
     '@typescript-eslint/no-misused-promises': 0,
     'no-misused-promises': 0,
-    'no-async-promise-executor': 0
+    'no-async-promise-executor': 0,
+    'no-unused-vars': ['error', { 'args': 'none' }]
   }
 }

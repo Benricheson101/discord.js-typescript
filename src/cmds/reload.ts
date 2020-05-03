@@ -4,7 +4,7 @@ import { confirmation } from '@util/misc'
 
 export default new Command({
   name: 'reload',
-  adminLock: true,
+  level: 3,
   help: {
     description: 'Reload a command',
     category: 'admin'
@@ -34,13 +34,13 @@ ${commands.map(({ config: { name } }) => `> \`${name}\``).join('\n')}`
     client.commands.delete(name)
     delete require.cache[require.resolve(filePath)]
 
-    const c: Command = require(filePath).default
+    const c: Command = (await import(filePath)).default
     c.config.filePath = filePath
     client.commands.set(c.config.name, c)
 
     finished.push(c)
   }
 
-  message.channel.send(`:white_check_mark: Reloaded: aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa
+  message.channel.send(`:white_check_mark: Reloaded:
 ${finished.map(({ config: { name } }) => `> \`${name}\``).join('\n') || '> `none`'}`)
 })

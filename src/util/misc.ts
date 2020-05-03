@@ -16,8 +16,12 @@ import {
 
 //
 // Extra functions that may or may not be useful.
-// Feel free to delete this file if you aren't using it,
-// none of these functions are required for the bot to function as is
+// Feel free to delete functions from this file if you aren't using them,
+// none of these functions are required for the bot to function, but a few may be used in the existing commands
+//
+// confirmation:
+// - cmds/reload.ts
+// - cmds/shutdown.ts
 //
 // If you delete this file, you can uninstall the following packages:
 // - string-similarity
@@ -181,7 +185,7 @@ function matchString (search: string, mainStrings?: string[], ops?: MatchStringO
  *
  * if (proceed) process.exit(0)
  */
-async function confirmation (message: Message, confirmationMessage: string, options?: ConfirmationOptions): Promise<boolean> {
+async function confirmation (message: Message, confirmationMessage: string | MessageEmbed, options?: ConfirmationOptions): Promise<boolean> {
   const yesReaction = '✔️'
   const noReaction = '✖️'
 
@@ -198,10 +202,10 @@ async function confirmation (message: Message, confirmationMessage: string, opti
   else if (!options?.keepReactions) msg.reactions.removeAll()
 
   if (e?.emoji?.name === yesReaction) {
-    if (options?.confirmMessage && !options?.deleteAfterReaction) await msg.edit(options?.confirmMessage instanceof MessageEmbed ? { embed: options?.confirmMessage } : options?.confirmMessage)
+    if (options?.confirmMessage && !options?.deleteAfterReaction) await msg.edit(options?.confirmMessage instanceof MessageEmbed ? { embed: options?.confirmMessage, content: null } : { embed: null, content: options?.confirmMessage })
     return true
   } else {
-    if (options?.denyMessage && !options?.deleteAfterReaction) await msg.edit(options?.denyMessage instanceof MessageEmbed ? { embed: options?.denyMessage } : options?.denyMessage)
+    if (options?.denyMessage && !options?.deleteAfterReaction) await msg.edit(options?.denyMessage instanceof MessageEmbed ? { embed: options?.denyMessage, content: null } : { embed: null, content: options?.denyMessage })
     return false
   }
 }

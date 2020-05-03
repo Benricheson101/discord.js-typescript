@@ -51,7 +51,7 @@ async function loadCommands (client: Client, commandsRootDir: string): Promise<v
   for await (const file of files) {
     if (!file.endsWith('.js')) continue
 
-    const command: Command = require(file).default
+    const command: Command = (await import(file)).default
     if (!(command instanceof Command)) continue
 
     if (!command.config.name) {

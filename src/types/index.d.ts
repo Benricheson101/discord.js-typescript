@@ -1,13 +1,17 @@
 import { PermissionResolvable, Message, Snowflake } from 'discord.js'
-import Client from '@util/Client'
+import DiscordClient from '@util/Client'
 import { MongoClientOptions } from 'mongodb'
 
 export type Nullable<T> = T | null
 
 declare module 'discord.js' {
   export interface Guild {
-    /** The guild's database document (if there is one) */
-    db: Promise<GuildDocument>
+    /** The guild's database document */
+    db?: Promise<GuildDocument>
+  }
+
+  export interface GuildMember {
+    client: DiscordClient
   }
 
   export interface ClientOptions {
@@ -29,8 +33,8 @@ export interface CommandOptions {
   aliases?: string[]
   /** Disable the command */
   disabled?: boolean
-  /** Only allow bot admins to use a command */
-  adminLock?: boolean
+  /** Permission level required to use the command */
+  level?: 0|1|2|3
   /** Where the command file is located. Set automatically. */
   filePath?: string
   /** Info for the help command */
@@ -48,7 +52,7 @@ export interface CommandOptions {
   }
 }
 
-export type CommandFunction = (client?: Client, message?: Message, args?: string[]) => any | void | Promise<void> | Promise<any>
+export type CommandFunction = (client?: DiscordClient, message?: Message, args?: string[]) => any | Promise<any>
 
 export interface DatabaseOptions {
   name: string

@@ -1,7 +1,7 @@
-import { defaultGuildDocument, errors } from '../setup'
+import { defaultGuildDocument } from '../setup'
 import { Message } from 'discord.js'
 import { GuildDocument } from '@types'
-import Command from '@command'
+import Command, { getLevel } from '@command'
 import Client from '@util/Client'
 
 export = async (client: Client, message: Message) => {
@@ -25,7 +25,7 @@ export = async (client: Client, message: Message) => {
     client.commands.find((c: Command) => c.config?.aliases?.includes(command))
   if (!cmd) return
 
-  if (cmd.config.adminLock && !client.admins.has(message.author.id)) return await message.channel.send('🔒 You do not have permission to use this command.')
+  if (cmd.config?.level > getLevel(message.member)) return await message.channel.send('🔒 You do not have permission to use this command.')
 
   if (cmd.config.disabled && !client.admins.has(message.author.id)) return await message.channel.send('🔒 This command has been disabled.')
 
@@ -35,6 +35,6 @@ export = async (client: Client, message: Message) => {
     cmd.run(client, message, args)
   } catch (err) {
     console.error(err)
-    message.channel.send(errors.generic)
+    message.channel.send(client.constants.errors.generic)
   }
 }
