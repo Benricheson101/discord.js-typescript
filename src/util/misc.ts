@@ -23,6 +23,9 @@ import {
 // - cmds/reload.ts
 // - cmds/shutdown.ts
 //
+// captureOutput:
+// - cmds/eval.ts
+//
 // If you delete this file, you can uninstall the following packages:
 // - string-similarity
 // - @types/string-similarity
@@ -32,6 +35,7 @@ import {
 // - Pagination
 // - Find nearest-matching string from array
 // - Confirmation
+// - Capture stdout and stderr that would be written from a callback funciton
 //
 
 /**
@@ -210,6 +214,41 @@ async function confirmation (message: Message, confirmationMessage: string | Mes
   }
 }
 
+/**
+ * Capture stdout and stderr while executing a function
+ * @param {Function} callback The callback function to execute
+ * @returns {Promise<CapturedOutput>} stdout, stderr and callback outputs
+ */
+async function captureOutput (callback: Function): Promise<CapturedOutput> {
+  return await new Promise((resolve) => {
+    const oldProcess = { ...process }
+    let stdout = ''
+    let stderr = ''
+
+    // overwrite stdout write function
+    process.stdout.write = (str: string) => {
+      stdout += str
+      return true
+    }
+
+    // overwrite stderr write function
+    process.stderr.write = (str: string) => {
+      stderr += str
+      return true
+    }
+
+    const c = callback()
+
+    delete process.stdout.write
+    process.stdout.write = oldProcess.stdout.write
+
+    delete process.stderr.write
+    process.stderr.write = oldProcess.stderr.write
+
+    return c.then((callbackOutput: any) => resolve({ stdout, stderr, callbackOutput }))
+  })
+}
+
 export {
   pages,
   PageOptions,
@@ -218,7 +257,10 @@ export {
   MatchStringOptions,
 
   confirmation,
-  ConfirmationOptions
+  ConfirmationOptions,
+
+  captureOutput,
+  CapturedOutput
 }
 
 //
@@ -268,4 +310,10 @@ interface ConfirmationOptions {
   time?: number
   /** Keep the reactions upon reacting */
   keepReactions?: boolean
+}
+
+interface CapturedOutput {
+  stdout: string
+  stderr: string
+  callbackOutput: any
 }
