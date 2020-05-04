@@ -4,8 +4,11 @@ import { runInNewContext, RunningScriptOptions, Context } from 'vm'
 import * as Discord from 'discord.js'
 import { inspect } from 'util'
 import { confirmation } from '@util/misc'
+import * as chalk from 'chalk'
 
 // TODO: allow codeblocks for code input?
+
+const oldProcess = { ...process }
 
 export default new Command({
   name: 'eval',
@@ -41,7 +44,9 @@ export default new Command({
     args,
     Discord,
     console,
-    require
+    require,
+    process,
+    global
   }
 
   const options: RunningScriptOptions = {
@@ -53,9 +58,7 @@ export default new Command({
   const start: number = Date.now()
   let result = execute(`(async () => { ${script} })()`, context, options)
 
-  console.log(await result)
-
-  if (!(await result)?.stdout && !(await result)?.cbOut) {
+  if (!(await result)?.stdout && !(await result)?.cbOut && !(await result)?.stderr) {
     if (!(
       await confirmation(
         message,
@@ -72,11 +75,25 @@ export default new Command({
 
   result
     .then(async (res) => {
+      // reset stdout write funciton
+      delete process.stdout.write
+      process.stdout.write = oldProcess.stdout.write
+
+      console.log(chalk`{red {strikethrough -----} {bold Eval Output} {strikethrough -----}}`)
+      console.log(res.stdout)
+
+      // reset stderr write function
+      delete process.stderr.write
+      process.stderr.write = oldProcess.stderr.write
+      console.error(res.stderr)
+
+      console.log(chalk`{red {strikethrough -----------------------}}`)
+
       message.channel.send({ embed: await generateEmbed(script, res, { start, end: Date.now() }) })
     })
 })
 
-async function execute (code: string, context: Context, options: object): Promise<{ stdout?: string, cbOut?: any }> {
+async function execute (code: string, context: Context, options: object): Promise<{ stdout?: string, stderr?: string, cbOut?: any }> {
   return await new Promise((resolve, reject) => {
     try {
       captureStdout(() => runInNewContext(code, context, options))
@@ -91,6 +108,7 @@ async function execute (code: string, context: Context, options: object): Promis
 async function generateEmbed (code: string, outs: any, { start, end }: { start: number, end: number }): Promise<Discord.MessageEmbed> {
   const output = typeof outs?.cbOut?.then === 'function' ? await outs?.cbOut : outs?.cbOut
   const stdout = outs?.stdout
+  const stderr = outs?.stderr
 
   const embed: Discord.MessageEmbed = new Discord.MessageEmbed()
     .setFooter(`Execution time: ${end - start}ms`)
@@ -102,11 +120,14 @@ async function generateEmbed (code: string, outs: any, { start, end }: { start: 
       .setDescription('```js\n' + ((typeof output === 'string' ? output : inspect(output)) || 'undefined')?.substring(0, 2000) + '```')
   }
 
-  if (stdout) embed.addField(':desktop: Stdout', '```js\n' + ((typeof stdout === 'string' ? stdout : inspect(stdout)) || 'undefined')?.substring(0, 1000) + '```')
+  if (stdout) embed.addField(':desktop: stdout', '```js\n' + ((typeof stdout === 'string' ? stdout : inspect(stdout)) || 'undefined')?.substring(0, 1000) + '```')
+
+  if (stderr) embed.addField(':warning: stderr', '```js\n' + ((typeof stderr === 'string' ? stderr : inspect(stderr)) || 'undefined')?.substring(0, 1000) + '```')
 
   if (!embed.fields.length && !embed.description) embed.setTitle('Nothing was returned.')
 
-  if ((stdout && !isError(outs?.cbOut)) || (stdout && !output) || (!stdout && !output)) embed.setColor('GREEN')
+  if ((stdout && !isError(outs?.cbOut)) || (stdout && !output) || (!stdout && !output && !stderr)) embed.setColor('GREEN')
+  else if (!stdout && !output && stderr) embed.setColor('YELLOW')
   else embed.setColor(isError(output) ? 'RED' : 'GREEN')
 
   embed.addField('Input :inbox_tray:', '```js\n' + code.substring(0, 1000) + '```')
@@ -117,18 +138,22 @@ async function generateEmbed (code: string, outs: any, { start, end }: { start: 
 async function captureStdout (callback: Function): Promise<any> {
   return await new Promise((resolve) => {
     let stdout = ''
-    const oldProcess = { ...process }
+    let stderr = ''
 
+    // overwrite stdout write function
     process.stdout.write = (str: string) => {
       stdout += str
       return true
     }
 
-    callback()
-      .then((cbOut: any) => resolve({ stdout, cbOut }))
-      .catch((cbOut: Error) => resolve({ stdout, cbOut }))
+    // overwrite stderr write function
+    process.stderr.write = (str: string) => {
+      stderr += str
+      return true
+    }
 
-    process.stdout.write = oldProcess.stdout.write
+    callback()
+      .finally((cbOut: any) => resolve({ stdout, stderr, cbOut }))
   })
 }
 
