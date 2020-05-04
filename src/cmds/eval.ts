@@ -54,9 +54,9 @@ export default new Command({
   }
 
   const start: number = Date.now()
-  let result = execute(`(async () => { ${script} })()`, context, options)
+  let result: any = await execute(`(async () => { ${script} })()`, context, options)
 
-  if (!(await result)?.stdout && !(await result)?.callbackOutput && !(await result)?.stderr) {
+  if (!result?.stdout && !result?.callbackOutput && !result?.stderr) {
     if (!(
       await confirmation(
         message,
@@ -72,7 +72,7 @@ export default new Command({
   }
 
   result
-    .then(async (res) => {
+    .then(async (res: { stdout: string, stderr: string, callbackOutput: any }) => {
       console.log(chalk`{red {strikethrough -----} {bold Eval Output} {strikethrough -----}}`)
       console.log(res.callbackOutput)
       console.log(res.stdout)
