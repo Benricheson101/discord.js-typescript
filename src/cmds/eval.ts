@@ -51,20 +51,35 @@ export default new Command({
   }
 
   const start: number = Date.now()
-  const result = execute(script, context, options)
+  let result = execute(`(async () => { ${script} })()`, context, options)
+
+  console.log(await result)
+
+  if (!(await result)?.stdout && !(await result)?.cbOut) {
+    if (!(
+      await confirmation(
+        message,
+        ':warning: Nothing was returned. Would you like to run the code again with implicit return?',
+        {
+          denyMessage: 'Cancelled.',
+          confirmMessage: 'Rerunning code...',
+          deleteAfterReaction: false
+        }
+      )
+    )) return
+    else result = execute(`(async () => ${script} )()`, context, options)
+  }
 
   result
     .then(async (res) => {
       message.channel.send({ embed: await generateEmbed(script, res, { start, end: Date.now() }) })
-    }, async (err) => {
-      message.channel.send({ embed: await generateEmbed(script, err, { start, end: Date.now() }) })
     })
 })
 
-async function execute (code: string, context: Context, options: object): Promise<string | Error> {
+async function execute (code: string, context: Context, options: object): Promise<{ stdout?: string, cbOut?: any }> {
   return await new Promise((resolve, reject) => {
     try {
-      captureStdout(() => runInNewContext(`(async () => { ${code} })()`, context, options))
+      captureStdout(() => runInNewContext(code, context, options))
         .then(resolve)
         .catch(reject)
     } catch (err) {
@@ -102,7 +117,7 @@ async function generateEmbed (code: string, outs: any, { start, end }: { start: 
 async function captureStdout (callback: Function): Promise<any> {
   return await new Promise((resolve) => {
     let stdout = ''
-    const oldWrite = process.stdout.write
+    const oldProcess = { ...process }
 
     process.stdout.write = (str: string) => {
       stdout += str
@@ -113,7 +128,7 @@ async function captureStdout (callback: Function): Promise<any> {
       .then((cbOut: any) => resolve({ stdout, cbOut }))
       .catch((cbOut: Error) => resolve({ stdout, cbOut }))
 
-    process.stdout.write = oldWrite
+    process.stdout.write = oldProcess.stdout.write
   })
 }
 

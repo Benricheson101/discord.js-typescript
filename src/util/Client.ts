@@ -7,7 +7,6 @@ import {
   Snowflake,
   MessageEmbed,
   Team,
-  TeamMember,
   User
 } from 'discord.js'
 import Command from '@command'
@@ -62,8 +61,8 @@ export default class extends Client {
     if (owner instanceof Team) {
       return owner.members.map((t) => t.user)
     }
-    if (owner instanceof TeamMember) {
-      return [owner.user]
+    if (owner instanceof User) {
+      return [owner]
     }
     throw new Error('Error fetching team members')
   }
