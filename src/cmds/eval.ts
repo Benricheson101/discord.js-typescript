@@ -9,6 +9,12 @@ import fetch from 'node-fetch'
 
 // TODO: allow codeblocks for code input?
 
+const options: any = {
+  callback: true,
+  stdout: true,
+  stderr: true
+}
+
 export default new Command({
   name: 'eval',
   aliases: ['evaluate'],
@@ -46,14 +52,14 @@ export default new Command({
     global
   }
 
-  const options: RunningScriptOptions = {
+  const scriptOptions: RunningScriptOptions = {
     filename: `${message.author.id}@${message.guild.id}`,
     timeout: 60000,
     displayErrors: true
   }
 
   const start: number = Date.now()
-  let result: any = execute(`(async () => { ${script} })()`, context, options)
+  let result: any = execute(`(async () => { ${script} })()`, context, scriptOptions)
 
   if (!(await result)?.stdout && !(await result)?.callbackOutput && !(await result)?.stderr) {
     if (!(
@@ -65,17 +71,30 @@ export default new Command({
         }
       )
     )) return
-    else result = execute(`(async () => ${script} )()`, context, options)
+    else result = execute(`(async () => ${script} )()`, context, scriptOptions)
   }
 
   interface Output { stdout: string, stderr: string, callbackOutput: any }
   result
     .then(async (res: Output) => {
-      console.log(chalk`{red {strikethrough -----} {bold Eval Output} {strikethrough -----}}`)
-      console.log(res.callbackOutput)
-      if (res.stdout) console.log(res.stdout)
-      if (res.stderr) console.error(res.stderr)
-      console.log(chalk`{red {strikethrough -----------------------}}`)
+      if (
+        (options.stdout && res?.stdout) ||
+        (options.stderr && res?.stderr) ||
+        (options.callback && res?.callbackOutput)
+      ) {
+        console.log(chalk`{red {strikethrough -----}[ {bold Eval Output} ]{strikethrough -----}}`) // 23
+        if (options.callback && res.callbackOutput) console.log(res.callbackOutput)
+
+        if (options.stdout && res.stdout) {
+          console.log(chalk`{red {strikethrough --------}[ {bold stdout} ]{strikethrough -------}}`)
+          console.log(res.stdout)
+        }
+        if (options.stderr && res.stderr) {
+          console.log(chalk`{red {strikethrough --------}[ {bold stderr} ]{strikethrough -------}}`)
+          console.error(res.stderr)
+        }
+        console.log(chalk`{red {strikethrough -------------------------}}`)
+      }
 
       if (
         matchString(client.token, inspect(res.callbackOutput).split(' '), { minRating: 0.6 }) ||
@@ -85,7 +104,7 @@ export default new Command({
         if (!(
           await confirmation(
             message,
-            ':bangbang: The bot token is likely located somewhere in the output of your code. Would you like to display the output?\n\n*Note: The output will be logged to the console regardless of if it is displayed here.*',
+            ':bangbang: The bot token is likely located somewhere in the output of your code. Would you like to display the output?',
             {
               deleteAfterReaction: true
             }
@@ -134,8 +153,7 @@ export default new Command({
       })
         .then(async (res) => await res.json())
 
-      console.log(body)
-      message.channel.send(`Here is the eval command output: ${body?.key ? `https://hastebin.com/${body.key}` : '`An error ocurred while uploading to hastebin.`'}`)
+      message.channel.send(`Here is the eval command output: ${body?.key ? `https://hastebin.com/${body.key as string}` : '`An error ocurred while uploading to hastebin.`'}`)
     })
 })
 

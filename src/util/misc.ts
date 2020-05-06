@@ -43,7 +43,8 @@ import {
  * @example
  * message.channel.send('Hello')
  * await wait(5000)
- * message.channel.send('Hi') */
+ * message.channel.send('Hi')
+ */
 export const wait = promisify(setTimeout)
 
 /**
