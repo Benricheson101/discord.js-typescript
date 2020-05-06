@@ -9,11 +9,13 @@
     "dotenv": "^8.2.0",
     "module-alias": "^2.2.2",
     "mongodb": "^3.5.5",
+    "node-fetch": "^2.6.0",
     "string-similarity": "^4.0.1"
   },
   "devDependencies": {
     "@types/dotenv": "^8.2.0",
     "@types/mongodb": "^3.5.5",
+    "@types/node-fetch": "^2.5.7",
     "@types/string-similarity": "^3.0.0",
     "@typescript-eslint/eslint-plugin": "2",
     "@typescript-eslint/parser": "^2.27.0",

@@ -3,8 +3,9 @@ import Command from '@command'
 import { runInNewContext, RunningScriptOptions, Context } from 'vm'
 import * as Discord from 'discord.js'
 import { inspect } from 'util'
-import { confirmation, captureOutput } from '@util/misc'
+import { confirmation, captureOutput, matchString } from '@util/misc'
 import * as chalk from 'chalk'
+import fetch from 'node-fetch'
 
 // TODO: allow codeblocks for code input?
 
@@ -29,9 +30,7 @@ export default new Command({
         .setDescription('```js\n' + script + '```')
         .setColor(client.constants.colors.default),
       {
-        denyMessage: 'Evaluation cancelled.',
-        confirmMessage: 'Executing...',
-        deleteAfterReaction: false
+        deleteAfterReaction: true
       }
     )
   )) return
@@ -62,35 +61,92 @@ export default new Command({
         message,
         ':warning: Nothing was returned. Would you like to run the code again with implicit return?',
         {
-          denyMessage: 'Cancelled.',
-          confirmMessage: 'Rerunning code...',
-          deleteAfterReaction: false
+          deleteAfterReaction: true
         }
       )
     )) return
     else result = execute(`(async () => ${script} )()`, context, options)
   }
 
+  interface Output { stdout: string, stderr: string, callbackOutput: any }
   result
-    .then(async (res: { stdout: string, stderr: string, callbackOutput: any }) => {
+    .then(async (res: Output) => {
       console.log(chalk`{red {strikethrough -----} {bold Eval Output} {strikethrough -----}}`)
       console.log(res.callbackOutput)
-      console.log(res.stdout)
-      console.error(res.stderr)
+      if (res.stdout) console.log(res.stdout)
+      if (res.stderr) console.error(res.stderr)
       console.log(chalk`{red {strikethrough -----------------------}}`)
 
+      if (
+        matchString(client.token, inspect(res.callbackOutput).split(' '), { minRating: 0.6 }) ||
+        matchString(client.token, inspect(res.stdout).split(' '), { minRating: 0.6 }) ||
+        matchString(client.token, inspect(res.stderr).split(' '), { minRating: 0.6 })
+      ) {
+        if (!(
+          await confirmation(
+            message,
+            ':bangbang: The bot token is likely located somewhere in the output of your code. Would you like to display the output?\n\n*Note: The output will be logged to the console regardless of if it is displayed here.*',
+            {
+              deleteAfterReaction: true
+            }
+          )
+        )) return
+      }
+
       message.channel.send({ embed: await generateEmbed(script, res, { start, end: Date.now() }) })
+
+      if (!(
+        await confirmation(
+          message,
+          ':information_source: Would you like to post the output of this command on hastebin?',
+          {
+            deleteAfterReaction: true
+          }
+        )
+      )) return
+
+      const evalOutput: string[] = []
+
+      if (res.callbackOutput) {
+        evalOutput.push(
+          '--------------- Callback Output ---------------', // 47
+          typeof res.callbackOutput === 'string' ? res.callbackOutput : inspect(res.callbackOutput)
+        )
+      }
+
+      if (res.stdout) {
+        evalOutput.push(
+          '--------------- stdout ---------------', // 38
+          typeof res.stdout === 'string' ? res.stdout : inspect(res.stdout)
+        )
+      }
+
+      if (res.stderr) {
+        evalOutput.push(
+          '--------------- stderr ---------------', // 38
+          typeof res.stderr === 'string' ? res.stderr : inspect(res.stderr)
+        )
+      }
+
+      const body = await fetch('https://hastebin.com/documents', {
+        method: 'post',
+        body: evalOutput.join('\n')
+      })
+        .then(async (res) => await res.json())
+
+      console.log(body)
+      message.channel.send(`Here is the eval command output: ${body?.key ? `https://hastebin.com/${body.key}` : '`An error ocurred while uploading to hastebin.`'}`)
     })
 })
 
 async function execute (code: string, context: Context, options: object): Promise<{ stdout: string, stderr: string, callbackOutput?: any }> {
-  return await new Promise((resolve, reject) => {
+  return await new Promise((resolve) => {
     try {
       captureOutput(() => runInNewContext(code, context, options))
         .then(resolve)
-        .catch(reject)
+        .catch(resolve)
     } catch (err) {
-      reject(err)
+      resolve(err)
     }
   })
 }

@@ -149,8 +149,8 @@ async function pages (message: Message, content: string[] | MessageEmbed[] | Arr
 
 /**
  * Find the closest matching string from an array
- * @param {string} The string to compare
- * @param {string[]} The strings to find the closest match in
+ * @param {string} search The string to compare
+ * @param {string[]} mainStrings The strings to find the closest match in
  * @returns {string | null}
  * @example
  * const search: string = 'Admin'
@@ -220,7 +220,7 @@ async function confirmation (message: Message, confirmationMessage: string | Mes
  * @returns {Promise<CapturedOutput>} stdout, stderr and callback outputs
  */
 async function captureOutput (callback: Function): Promise<CapturedOutput> {
-  return await new Promise((resolve) => {
+  return await new Promise((resolve, reject) => {
     const oldProcess = { ...process }
     let stdout = ''
     let stderr = ''
@@ -237,15 +237,27 @@ async function captureOutput (callback: Function): Promise<CapturedOutput> {
       return true
     }
 
-    const c = callback()
+    try {
+      const c = callback()
 
-    delete process.stdout.write
-    process.stdout.write = oldProcess.stdout.write
+      delete process.stdout.write
+      process.stdout.write = oldProcess.stdout.write
 
-    delete process.stderr.write
-    process.stderr.write = oldProcess.stderr.write
+      delete process.stderr.write
+      process.stderr.write = oldProcess.stderr.write
 
-    return c.then((callbackOutput: any) => resolve({ stdout, stderr, callbackOutput }))
+      return c
+        .catch((c: Error) => reject({ stdout, stderr, callbackOutput: c })) // eslint-disable-line prefer-promise-reject-errors
+        .then((callbackOutput: any) => resolve({ stdout, stderr, callbackOutput }))
+    } catch (error) {
+      delete process.stdout.write
+      process.stdout.write = oldProcess.stdout.write
+
+      delete process.stderr.write
+      process.stderr.write = oldProcess.stderr.write
+      console.log('catch block')
+      return reject({ stdout, stderr, callbackOutput: error }) // eslint-disable-line prefer-promise-reject-errors
+    }
   })
 }
 
