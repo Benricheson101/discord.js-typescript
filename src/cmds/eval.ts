@@ -1,4 +1,3 @@
-/* eslint prefer-promise-reject-errors: 0 */
 import Command from '@command'
 import { runInNewContext, RunningScriptOptions, Context } from 'vm'
 import * as Discord from 'discord.js'
