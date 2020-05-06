@@ -9,7 +9,7 @@ import fetch from 'node-fetch'
 // TODO: allow codeblocks for code input?
 
 const options: any = {
-  callback: true,
+  callback: false,
   stdout: true,
   stderr: true
 }
@@ -81,18 +81,18 @@ export default new Command({
         (options.stderr && res?.stderr) ||
         (options.callback && res?.callbackOutput)
       ) {
-        console.log(chalk`{red {strikethrough -----}[ {bold Eval Output} ]{strikethrough -----}}`) // 23
+        console.log(chalk`{red {strikethrough -}[ {bold Eval Output} ]{strikethrough ---------}}`)
         if (options.callback && res.callbackOutput) console.log(res.callbackOutput)
 
         if (options.stdout && res.stdout) {
-          console.log(chalk`{red {strikethrough --------}[ {bold stdout} ]{strikethrough -------}}`)
+          console.log(chalk`{red {strikethrough -}[ {bold stdout} ]{strikethrough --------------}}`)
           console.log(res.stdout)
         }
         if (options.stderr && res.stderr) {
-          console.log(chalk`{red {strikethrough --------}[ {bold stderr} ]{strikethrough -------}}`)
+          console.log(chalk`{red {strikethrough -}[ {bold stderr} ]{strikethrough --------------}}`)
           console.error(res.stderr)
         }
-        console.log(chalk`{red {strikethrough -------------------------}}`)
+        console.log(chalk`{red {strikethrough -}[ {bold End} ]{strikethrough -----------------}}`)
       }
 
       if (
@@ -110,8 +110,8 @@ export default new Command({
           )
         )) return
       }
-
-      message.channel.send({ embed: await generateEmbed(script, res, { start, end: Date.now() }) })
+      const embed: Discord.MessageEmbed = await generateEmbed(script, res, { start, end: Date.now() })
+      const msg = await message.channel.send({ embed: embed })
 
       if (!(
         await confirmation(
@@ -127,21 +127,21 @@ export default new Command({
 
       if (res.callbackOutput) {
         evalOutput.push(
-          '--------------- Callback Output ---------------', // 47
+          '-[ Eval Output ]---------',
           typeof res.callbackOutput === 'string' ? res.callbackOutput : inspect(res.callbackOutput)
         )
       }
 
       if (res.stdout) {
         evalOutput.push(
-          '--------------- stdout ---------------', // 38
+          '-[ stdout ]--------------',
           typeof res.stdout === 'string' ? res.stdout : inspect(res.stdout)
         )
       }
 
       if (res.stderr) {
         evalOutput.push(
-          '--------------- stderr ---------------', // 38
+          '-[ stderr ]--------------',
           typeof res.stderr === 'string' ? res.stderr : inspect(res.stderr)
         )
       }
@@ -152,7 +152,7 @@ export default new Command({
       })
         .then(async (res) => await res.json())
 
-      message.channel.send(`Here is the eval command output: ${body?.key ? `https://hastebin.com/${body.key as string}` : '`An error ocurred while uploading to hastebin.`'}`)
+      await msg.edit({ embed: embed.addField(':notepad_spiral: Hastebin', `https://hastebin.com/${body.key as string}`) })
     })
 })
 
@@ -193,7 +193,7 @@ async function generateEmbed (code: string, outs: any, { start, end }: { start: 
   else if (!stdout && !output && stderr) embed.setColor('YELLOW')
   else embed.setColor(isError(output) ? 'RED' : 'GREEN')
 
-  embed.addField('Input :inbox_tray:', '```js\n' + code.substring(0, 1000) + '```')
+  embed.addField(':inbox_tray: Input', '```js\n' + code.substring(0, 1000) + '```')
 
   return embed
 }
