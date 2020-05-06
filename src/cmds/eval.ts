@@ -6,8 +6,6 @@ import { confirmation, captureOutput, matchString } from '@util/misc'
 import * as chalk from 'chalk'
 import fetch from 'node-fetch'
 
-// TODO: allow codeblocks for code input?
-
 const options: any = {
   callback: false,
   stdout: true,
@@ -25,7 +23,7 @@ export default new Command({
 }, async (client, message, args) => {
   if (!args[0]) return await message.channel.send(':x: You must provide code to execute!')
 
-  const script: string = args.join(' ')
+  const script: string = parseCodeblock(args.join(' '))
 
   if (!(
     await confirmation(
@@ -57,8 +55,9 @@ export default new Command({
     displayErrors: true
   }
 
-  const start: number = Date.now()
-  let result: any = execute(`(async () => { ${script} })()`, context, scriptOptions)
+  let start: number = Date.now()
+  let result: any = execute(`'use strict'; (async () => { ${script} })()`, context, scriptOptions)
+  let end: number = Date.now()
 
   if (!(await result)?.stdout && !(await result)?.callbackOutput && !(await result)?.stderr) {
     if (!(
@@ -70,7 +69,11 @@ export default new Command({
         }
       )
     )) return
-    else result = execute(`(async () => ${script} )()`, context, scriptOptions)
+    else {
+      start = Date.now()
+      result = execute(`'use strict'; (async () => ${script} )()`, context, scriptOptions)
+      end = Date.now()
+    }
   }
 
   interface Output { stdout: string, stderr: string, callbackOutput: any }
@@ -110,7 +113,7 @@ export default new Command({
           )
         )) return
       }
-      const embed: Discord.MessageEmbed = await generateEmbed(script, res, { start, end: Date.now() })
+      const embed: Discord.MessageEmbed = await generateEmbed(script, res, { start, end })
       const msg = await message.channel.send({ embed: embed })
 
       if (!(
@@ -202,4 +205,14 @@ function isError (object: object): boolean {
   const name = object?.constructor?.name
   if (!name) return true
   return /.*Error$/.test(name)
+}
+
+// Code from: https://github.com/lifeguardbot/lifeguard/blob/a31f57b5164d95d16f0dd961c10a5b77dc9e7bd4/src/plugins/dev/eval.ts#L6-L13
+function parseCodeblock (script: string): string {
+  const cbr = /^(([ \t]*`{3,4})([^\n]*)([\s\S]+?)(^[ \t]*\2))/gm
+  const result = cbr.exec(script)
+  if (result) {
+    return result[4]
+  }
+  return script
 }

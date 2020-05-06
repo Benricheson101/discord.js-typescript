@@ -256,7 +256,6 @@ async function captureOutput (callback: Function): Promise<CapturedOutput> {
 
       delete process.stderr.write
       process.stderr.write = oldProcess.stderr.write
-      console.log('catch block')
       return reject({ stdout, stderr, callbackOutput: error }) // eslint-disable-line prefer-promise-reject-errors
     }
   })

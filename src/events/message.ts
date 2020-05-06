@@ -18,7 +18,7 @@ export = async (client: Client, message: Message) => {
 
   if (!message.content.startsWith(guild.config.prefix)) return
 
-  const args: string[] = message.content.slice(guild.config.prefix.length).split(/\s+/)
+  const args: string[] = message.content.slice(guild.config.prefix.length).split(' ')
   const command: string = args.shift().toLowerCase()
 
   const cmd: Command | null = client.commands.get(command) ||
