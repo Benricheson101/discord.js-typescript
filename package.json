@@ -9,7 +9,7 @@
     "dotenv": "^8.2.0",
     "module-alias": "^2.2.2",
     "mongodb": "^3.5.5",
-    "node-fetch": "^2.6.0",
+    "node-fetch": "^3.1.1",
     "string-similarity": "^4.0.1"
   },
   "devDependencies": {
